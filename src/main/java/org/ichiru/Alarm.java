@@ -120,7 +120,7 @@ public class Alarm {
             if (WEATHER_STATION.equals(authorName)) {
                 Element idElement = entry.selectFirst("id");
                 entryUrls.add(idElement);
-                resultMessage.append("Found URL: ").append(idElement.text()).append("\n");
+                resultMessage.append("\n参照URL: ").append(idElement.text()).append("\n");
                 if (DEBUG) logger.debug("解析中のエントリー: " + idElement.text());
             }
             count++;
