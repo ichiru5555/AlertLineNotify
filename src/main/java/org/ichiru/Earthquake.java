@@ -93,9 +93,14 @@ public class Earthquake {
                     }
                 }
 
-                JsonObject config = DataFile.load("data.json");
-                config.addProperty("earthquake_id", id);
-                DataFile.save("config.json", config);
+                JsonObject data_file = DataFile.load("data.json");
+                String earthquake_id = data_file.get("earthquake_id").getAsString();
+                if (earthquake_id == id){
+                    if (DEBUG) logger.debug("地震IDが同じなため通知しません。");
+                    return;
+                }
+                data_file.addProperty("earthquake_id", id);
+                DataFile.save("data.json", data_file);
                 if (DEBUG) logger.debug("地震ID " + id + " を data.json に保存しました。");
 
                 presentationType = typeMap.getOrDefault(presentationType, "不明");
@@ -103,12 +108,12 @@ public class Earthquake {
                 tsunami = tsunamiMap.getOrDefault(tsunami, "不明");
 
                 String messageContent = String.format(
-                        "%s\n発表元: %s\n発表時間: %s\n地震発生時間: %s\n地震発生場所: %s\n震源の深さ: %sKm\n震度: %s\nマグニチュード: %s\n地震の津波: %s\n都道府県: %s",
+                        "\n%s\n発表元: %s\n発表時間: %s\n地震発生時間: %s\n地震発生場所: %s\n震源の深さ: %sKm\n震度: %s\nマグニチュード: %s\n地震の津波: %s\n都道府県: %s",
                         presentationType, publisher, announcementTime, earthquakeTime, earthquakeName, depth, earthquakeIntensity,
                         magnitude, tsunami, prefectures
                 );
 
-                boolean success = LineNotify.sendNotification(config.get("token").getAsString(), messageContent);
+                boolean success = LineNotify.sendNotification(DataFile.load("config.json").get("token").getAsString(), messageContent);
                 if (!success) {
                     logger.warn("地震情報の通知に失敗しました。");
                 }
