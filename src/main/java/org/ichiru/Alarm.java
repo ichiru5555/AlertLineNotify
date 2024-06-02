@@ -22,7 +22,7 @@ public class Alarm {
     private final Boolean DEBUG = DataFile.load("config.json").get("debug").getAsBoolean();
 
     // データの取得と処理を行うメソッド
-    public void fetchAndProcessData() throws IOException {
+    public void fetchAndProcessData() {
         if (DEBUG) logger.debug("警報の確認を開始しました");
 
         // ステップ1: 初期XMLを取得

@@ -41,6 +41,7 @@ public class DataFile {
         JsonObject defaultData = new JsonObject();
         defaultData.addProperty("earthquake_id", "");
         defaultData.addProperty("Alarm_id", "");
+        defaultData.addProperty("previousPrice", 0);
         save("data.json", defaultData);
         logger.info("データ保存ファイルを作成しました。");
     }
