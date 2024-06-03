@@ -84,11 +84,11 @@ public class Earthquake {
                 String tsunami = data.has("earthquake") && data.get("earthquake").getAsJsonObject().has("domesticTsunami") ? data.get("earthquake").getAsJsonObject().get("domesticTsunami").getAsString() : "不明";
                 String prefectures = data.has("points") && !data.get("points").getAsJsonArray().isEmpty() && data.get("points").getAsJsonArray().get(0).getAsJsonObject().has("pref") ? data.get("points").getAsJsonArray().get(0).getAsJsonObject().get("pref").getAsString() : "不明";
 
-                // 震度が5弱未満の場合は通知を送信しない
+                // 震度が4未満の場合は通知を送信しない
                 if (earthquakeIntensity != null && !earthquakeIntensity.equals("不明")) {
                     int intensity = Integer.parseInt(earthquakeIntensity);
-                    if (intensity < 45) {
-                        if (DEBUG) logger.debug("震度が5弱未満のため通知しません。");
+                    if (intensity < 40) {
+                        if (DEBUG) logger.debug("震度が4未満のため通知しません。");
                         return;
                     }
                 }

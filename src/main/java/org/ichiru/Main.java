@@ -14,18 +14,17 @@ public class Main {
     public static void main(String[] args) {
         File configfile = new File("config.json");
         File datafile = new File("data.json");
-        if (!configfile.exists() & !datafile.exists()){
+        if (!configfile.exists() || !datafile.exists()){
             DataFile.create_config();
             DataFile.create_data();
             return;
         }
 
         if (DataFile.load("config.json").get("debug").getAsBoolean()) logger.debug("デバッグモードが有効です。");
-        ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(3);
+        ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(2);
         Alarm alarm = new Alarm();
 
         scheduler.scheduleAtFixedRate(alarm::fetchAndProcessData, 0, 5, TimeUnit.MINUTES);
         scheduler.scheduleAtFixedRate(Earthquake::sendEarthquakeNotification, 0, 5, TimeUnit.SECONDS);
-        scheduler.scheduleAtFixedRate(Exchange::CheckPrice, 0, 3, TimeUnit.HOURS);
     }
 }
