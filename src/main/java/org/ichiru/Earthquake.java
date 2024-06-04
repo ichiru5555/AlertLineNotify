@@ -88,20 +88,20 @@ public class Earthquake {
                 if (earthquakeIntensity != null && !earthquakeIntensity.equals("不明")) {
                     int intensity = Integer.parseInt(earthquakeIntensity);
                     if (intensity < 40) {
-                        if (DEBUG) logger.debug("震度が4未満のため通知しません。");
+                        if (DEBUG) logger.debug("震度が4未満のため通知しません");
                         return;
                     }
                 }
 
                 JsonObject data_file = DataFile.load("data.json");
                 String earthquake_id = data_file.get("earthquake_id").getAsString();
-                if (earthquake_id == id){
-                    if (DEBUG) logger.debug("地震IDが同じなため通知しません。");
+                if (earthquake_id.equals(id)){
+                    if (DEBUG) logger.debug("地震IDが同じなため通知しません");
                     return;
                 }
                 data_file.addProperty("earthquake_id", id);
                 DataFile.save("data.json", data_file);
-                if (DEBUG) logger.debug("地震ID " + id + " を data.json に保存しました。");
+                if (DEBUG) logger.debug("地震ID {} を data.json に保存しました", id);
 
                 presentationType = typeMap.getOrDefault(presentationType, "不明");
                 earthquakeIntensity = intensityMap.getOrDefault(earthquakeIntensity, "不明");
@@ -115,7 +115,7 @@ public class Earthquake {
 
                 boolean success = LineNotify.sendNotification(DataFile.load("config.json").get("token").getAsString(), messageContent);
                 if (!success) {
-                    logger.warn("地震情報の通知に失敗しました。");
+                    logger.warn("地震情報の通知に失敗しました");
                 }
             } else {
                 logger.error("地震情報の取得に失敗しました。HTTPステータスコード: " + response.code());

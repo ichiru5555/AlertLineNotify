@@ -14,15 +14,15 @@ import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 
-public class Alarm {
-    private static final Logger logger = LoggerFactory.getLogger(Alarm.class.getName());
+public class WeatherAlarm {
+    private static final Logger logger = LoggerFactory.getLogger(WeatherAlarm.class);
     private static final String XML_URL = "https://www.data.jma.go.jp/developer/xml/feed/extra.xml";
-    private final OkHttpClient client = new OkHttpClient();
-    private final String WEATHER_STATION = DataFile.load("config.json").get("Weather_station").getAsString();
-    private final Boolean DEBUG = DataFile.load("config.json").get("debug").getAsBoolean();
+    private static final OkHttpClient client = new OkHttpClient();
+    private static final String WEATHER_STATION = DataFile.load("config.json").get("Weather_station").getAsString();
+    private static final Boolean DEBUG = DataFile.load("config.json").get("debug").getAsBoolean();
 
     // データの取得と処理を行うメソッド
-    public void fetchAndProcessData() {
+    public static void fetchAndProcessData() {
         if (DEBUG) logger.debug("警報の確認を開始しました");
 
         // ステップ1: 初期XMLを取得
@@ -87,7 +87,7 @@ public class Alarm {
     }
 
     // 指定されたURLからXMLを取得するメソッド
-    private String fetchXml(String url) {
+    private static String fetchXml(String url) {
         Request request = new Request.Builder().url(url).build();
         try (Response response = client.newCall(request).execute()) {
             if (response.isSuccessful() && response.body() != null) {
@@ -103,7 +103,7 @@ public class Alarm {
     }
 
     // 初期XMLを解析し、エントリーURLを抽出するメソッド
-    private Elements parseInitialXml(String xml, StringBuilder resultMessage) {
+    private static Elements parseInitialXml(String xml, StringBuilder resultMessage) {
         Document doc = Jsoup.parse(xml, "", Parser.xmlParser());
         Elements entries = doc.select("entry");
         Elements entryUrls = new Elements();
@@ -130,7 +130,7 @@ public class Alarm {
     }
 
     // 二次XMLを解析し、結果メッセージに追加するメソッド
-    private boolean parseSecondaryXml(String xml, StringBuilder resultMessage) {
+    private static boolean parseSecondaryXml(String xml, StringBuilder resultMessage) {
         Document doc = Jsoup.parse(xml, "", org.jsoup.parser.Parser.xmlParser());
         String title = doc.selectFirst("Head > Title").text();
         String text = doc.selectFirst("Head > Headline > Text").text();

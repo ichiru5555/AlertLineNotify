@@ -23,10 +23,10 @@ public class LineNotify {
 
         try (Response response = client.newCall(request).execute()) {
             if (response.isSuccessful()) {
-                logger.info("LINE通知に成功しました。");
+                logger.info("LINE通知に成功しました");
                 return true;
             } else {
-                logger.warn("LINE通知に失敗しました。HTTPステータスコード: " + response.code());
+                logger.warn("LINE通知に失敗しました HTTPステータスコード: " + response.code());
                 return false;
             }
         } catch (IOException e) {
