@@ -30,9 +30,9 @@ public class Main {
 
         ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(2);
 
+        scheduler.submit(Earthquake::sendEarthquakeNotification);
         scheduler.scheduleAtFixedRate(WeatherAlarm::fetchAndProcessData, 0, 5, TimeUnit.MINUTES);
-        scheduler.scheduleAtFixedRate(Earthquake::sendEarthquakeNotification, 0, 5, TimeUnit.SECONDS);
-        DailyTaskScheduler dailyTaskScheduler = new DailyTaskScheduler(scheduler);
-        dailyTaskScheduler.scheduleDailyTask(WeatherTemperature::notifyIfExceedsThreshold, config.get("Weather_hours").getAsInt(), config.get("Weather_minutes").getAsInt());
+        TaskScheduler dailyTaskScheduler = new TaskScheduler(scheduler);
+        dailyTaskScheduler.Daily(WeatherTemperature::notifyIfExceedsThreshold, config.get("Weather_hours").getAsInt(), config.get("Weather_minutes").getAsInt());
     }
 }

@@ -7,15 +7,15 @@ import java.util.Calendar;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
-public class DailyTaskScheduler {
-    private static final Logger logger = LoggerFactory.getLogger(DailyTaskScheduler.class);
+public class TaskScheduler {
+    private static final Logger logger = LoggerFactory.getLogger(TaskScheduler.class);
     private final ScheduledExecutorService scheduler;
     private static final Boolean DEBUG = DataFile.load("config.json").get("debug").getAsBoolean();
-    public DailyTaskScheduler(ScheduledExecutorService scheduler) {
+    public TaskScheduler(ScheduledExecutorService scheduler) {
         this.scheduler = scheduler;
     }
 
-    public void scheduleDailyTask(Runnable task, int Hour, int Minute) {
+    public void Daily(Runnable task, int Hour, int Minute) {
         Calendar now = Calendar.getInstance();
         Calendar firstRun = Calendar.getInstance();
         firstRun.set(Calendar.HOUR_OF_DAY, Hour);

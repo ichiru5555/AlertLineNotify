@@ -26,18 +26,18 @@ public class WeatherAlarm {
         if (DEBUG) logger.debug("警報の確認を開始しました");
 
         // ステップ1: 初期XMLを取得
-        if (DEBUG) logger.debug("初期XMLを取得しています: " + XML_URL);
         String initialXml = fetchXml(XML_URL);
         if (initialXml == null) {
-            logger.error("初期XMLの取得に失敗しました。");
+            logger.error("初期XMLの取得に失敗しました");
             return;
         }
-        if (DEBUG) logger.debug("初期XMLの取得に成功しました。");
+        if (DEBUG) logger.debug("初期XMLの取得に成功しました");
 
         // ステップ2: 初期XMLを解析し、最大5つのURLを取得
         StringBuilder resultMessage = new StringBuilder();
-        if (DEBUG) logger.debug("初期XMLを解析しています。");
+        if (DEBUG) logger.debug("初期XMLを解析しています");
         Elements entryUrls = parseInitialXml(initialXml, resultMessage);
+        if (DEBUG) logger.debug("初期XMLの解析が完了しました");
         if (entryUrls.isEmpty()) {
             return;
         }
@@ -52,7 +52,7 @@ public class WeatherAlarm {
 
             // URLが既に処理されているか確認
             if (entryId.equals(previousAlarmId)) {
-                logger.info("エントリーID " + entryId + " は既に処理されています。");
+                logger.info("エントリーID {} は既に処理されています", entryId);
                 continue;
             }
 
@@ -60,12 +60,12 @@ public class WeatherAlarm {
             JsonObject data = DataFile.load("data.json");
             data.addProperty("Alarm_id", entryId);
             DataFile.save("data.json", data);
-            if (DEBUG) logger.debug("エントリーID " + entryId + " を data.json に保存しました。");
+            if (DEBUG) logger.debug("エントリーID {} を data.json に保存しました", entryId);
 
             // 二次XMLを取得
             String secondaryXml = fetchXml(entryId);
             if (secondaryXml == null) {
-                logger.error("二次XMLの取得に失敗しました。");
+                logger.error("二次XMLの取得に失敗しました");
                 continue;
             }
             if (DEBUG) logger.debug("二次XMLの取得に成功しました: " + entryId);
@@ -134,6 +134,10 @@ public class WeatherAlarm {
         Document doc = Jsoup.parse(xml, "", org.jsoup.parser.Parser.xmlParser());
         String title = doc.selectFirst("Head > Title").text();
         String text = doc.selectFirst("Head > Headline > Text").text();
+        if (text.contains("注意報")){
+            if (DEBUG) logger.debug("注意報のため終了");
+            return false;
+        }
 
         resultMessage.append(title).append("\n");
         resultMessage.append(text).append("\n");
@@ -153,6 +157,7 @@ public class WeatherAlarm {
             Elements areas = info.select("Areas > Area");
             for (Element area : areas) {
                 resultMessage.append(area.selectFirst("Name").text()).append("\n");
+                resultMessage.append("----").append("\n");
                 if (DEBUG) logger.debug("解析中のエリア名: " + area.selectFirst("Name").text());
             }
         }
