@@ -7,6 +7,8 @@ import com.google.gson.Gson;
 import com.google.gson.JsonObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.ichiru.notifi.LineNotify;
+import org.ichiru.notifi.Mail;
 
 import java.io.IOException;
 
@@ -43,6 +45,7 @@ public class WeatherTemperature {
                 int maxTemp = max.get("celsius").getAsInt();
                 if (config.get("Weather_max_temp").getAsInt() <= maxTemp){
                     LineNotify.sendNotification(DataFile.load("config.json").get("token").getAsString(), "\n最高気温がしきい値を超えました\n最高気温: " + maxTemp);
+                    Mail.send("最高気温がしきい値を超過", "\n最高気温がしきい値を超えました\n最高気温: " + maxTemp);
                 }
             }
         } catch (IOException e) {

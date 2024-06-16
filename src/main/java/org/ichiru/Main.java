@@ -3,6 +3,7 @@ package org.ichiru;
 import com.google.gson.JsonObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.ichiru.keep.Exchange;
 
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
@@ -11,9 +12,7 @@ import java.io.File;
 
 public class Main {
     private static final Logger logger = LoggerFactory.getLogger(Main.class.getName());
-
     private static final JsonObject config = DataFile.load("config.json");
-
     public static void main(String[] args) {
         File configfile = new File("config.json");
         File datafile = new File("data.json");
@@ -25,14 +24,16 @@ public class Main {
             DataFile.create_data();
         }
 
-        if (config.get("debug").getAsBoolean()) logger.debug("デバッグモードが有効です。");
+        if (config.get("debug").getAsBoolean()) logger.debug("デバッグモードが有効です");
         DataFile.CheckConfig();
 
         ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(2);
 
         scheduler.submit(Earthquake::sendEarthquakeNotification);
         scheduler.scheduleAtFixedRate(WeatherAlarm::fetchAndProcessData, 0, 5, TimeUnit.MINUTES);
-        TaskScheduler dailyTaskScheduler = new TaskScheduler(scheduler);
-        dailyTaskScheduler.Daily(WeatherTemperature::notifyIfExceedsThreshold, config.get("Weather_hours").getAsInt(), config.get("Weather_minutes").getAsInt());
+        TaskScheduler Taskscheduler = new TaskScheduler(scheduler);
+        Taskscheduler.Daily(WeatherTemperature::notifyIfExceedsThreshold, config.get("Weather_hours").getAsInt(), config.get("Weather_minutes").getAsInt());
+        Taskscheduler.Daily(Exchange::CheckPrice, 0, 10);
+        Taskscheduler.Month(Exchange::delete, 1, 0, 0);
     }
 }

@@ -11,6 +11,8 @@ import org.jsoup.select.Elements;
 import org.jsoup.parser.Parser;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.ichiru.notifi.LineNotify;
+import org.ichiru.notifi.Mail;
 
 import java.io.IOException;
 
@@ -81,7 +83,10 @@ public class WeatherAlarm {
         if (!allKindNameAreWarnings) {
             if (DEBUG) logger.debug("通知を送信しています...");
             LineNotify.sendNotification(DataFile.load("config.json").get("token").getAsString(), resultMessage.toString());
-            if (DEBUG) logger.info("通知が送信されました。");
+            if (DataFile.load("config.json").get("mail_enable").getAsBoolean()){
+                Mail.send("警報等の通知", resultMessage.toString());
+            }
+            if (DEBUG) logger.info("通知が送信されました");
         }
         if (DEBUG) logger.debug("警報の確認が完了しました");
     }

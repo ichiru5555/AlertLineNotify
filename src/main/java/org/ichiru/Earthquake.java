@@ -1,22 +1,27 @@
 package org.ichiru;
 
+import com.zaxxer.hikari.HikariDataSource;
 import okhttp3.*;
-import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.ichiru.notifi.LineNotify;
+import org.ichiru.notifi.Mail;
 
-import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Objects;
 import java.util.UUID;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.SQLException;
 
 public class Earthquake {
     private static final Logger logger = LoggerFactory.getLogger(Earthquake.class);
     private static final String WEBSOCKET_URL = "wss://api.p2pquake.net/v2/ws";
-    private static final Boolean DEBUG = DataFile.load("config.json").get("debug").getAsBoolean();
+    private static final JsonObject config = DataFile.load("config.json");
+    private static final Boolean DEBUG = config.get("debug").getAsBoolean();
+    private static HikariDataSource dataSource;
 
     // 地震情報のタイプを日本語に変換するためのマップ
     private static final Map<String, String> typeMap = new HashMap<>() {{
@@ -54,19 +59,30 @@ public class Earthquake {
 
     // 地震通知を送信するメソッド
     public static void sendEarthquakeNotification() {
-        logger.info("地震情報の確認を開始");
+        if (config.get("database_enable").getAsBoolean()) {
+            dataSource = new HikariDataSource();
+            dataSource.setJdbcUrl(String.format("jdbc:mariadb://%s:%s/%s", config.get("database_host").getAsString(), config.get("database_port").getAsString(), config.get("database_name").getAsString()));
+            dataSource.setUsername(config.get("database_username").getAsString());
+            dataSource.setPassword(config.get("database_password").getAsString());
+            dataSource.addDataSourceProperty("autoReconnect", true);
+            dataSource.setDriverClassName("org.mariadb.jdbc.Driver");
+        }
+
+        if (config.get("database_enable").getAsBoolean() && DEBUG && dataSource != null) logger.debug("データベースに接続できました");
+
+        if (DEBUG) logger.debug("地震情報の確認を開始");
         OkHttpClient client = new OkHttpClient();
         Request request = new Request.Builder().url(WEBSOCKET_URL).build();
 
         client.newWebSocket(request, new WebSocketListener() {
             @Override
             public void onOpen(WebSocket webSocket, Response response) {
-                logger.info("WebSocket接続が開きました");
+                if(DEBUG) logger.debug("WebSocket接続が開きました");
             }
 
             @Override
             public void onMessage(WebSocket webSocket, String text) {
-                logger.info("受信メッセージ: " + text);
+                if (DEBUG) logger.debug("受信メッセージ: " + text);
                 processMessage(text);
             }
 
@@ -78,6 +94,7 @@ public class Earthquake {
             @Override
             public void onClosed(WebSocket webSocket, int code, String reason) {
                 logger.warn("WebSocket接続が閉じられました。コード: {} 理由: {}", code, reason);
+                if (dataSource != null) dataSource.close();
                 client.dispatcher().executorService().shutdown();
             }
         });
@@ -104,6 +121,39 @@ public class Earthquake {
         String tsunami = data.has("earthquake") && data.get("earthquake").getAsJsonObject().has("domesticTsunami") ? data.get("earthquake").getAsJsonObject().get("domesticTsunami").getAsString() : "不明";
         String prefectures = data.has("points") && !data.get("points").getAsJsonArray().isEmpty() && data.get("points").getAsJsonArray().get(0).getAsJsonObject().has("pref") ? data.get("points").getAsJsonArray().get(0).getAsJsonObject().get("pref").getAsString() : "不明";
 
+        if (id.equals(config.get("earthquake_id").getAsString())) {
+            if (DEBUG) logger.debug("地震IDが同じなため通知しません");
+            return;
+        }
+        config.addProperty("earthquake_id", id);
+        DataFile.save("data.json", config);
+        if (DEBUG) logger.debug("地震ID {} を data.json に保存しました", id);
+
+        presentationType = typeMap.getOrDefault(presentationType, "不明");
+        earthquakeIntensity = intensityMap.getOrDefault(earthquakeIntensity, "不明");
+        tsunami = tsunamiMap.getOrDefault(tsunami, "不明");
+
+        //データベースに保存
+        if (config.get("database_enable").getAsBoolean()){
+            String sql = "INSERT INTO earthquake (id, announcement_time, earthquake_intensity, prefectures, earthquake_name, magnitude, depth, tsunami) VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
+
+            try (Connection conn = dataSource.getConnection();
+                 PreparedStatement pstmt = conn.prepareStatement(sql)) {
+                pstmt.setString(1, id);
+                pstmt.setString(2, announcementTime);
+                pstmt.setString(3, earthquakeIntensity);
+                pstmt.setString(4, prefectures);
+                pstmt.setString(5, earthquakeName);
+                pstmt.setString(6, magnitude);
+                pstmt.setInt(7, Integer.parseInt(depth));
+                pstmt.setString(8, tsunami);
+                pstmt.executeUpdate();
+                if (DEBUG) logger.debug("/");
+            } catch (SQLException e) {
+                logger.error("データ保存中にエラーが発生しました: " + e.getMessage());
+            }
+        }
+
         // 震度が4未満の場合は通知を送信しない
         if (earthquakeIntensity != null && !earthquakeIntensity.equals("不明")) {
             int intensity = Integer.parseInt(earthquakeIntensity);
@@ -113,28 +163,13 @@ public class Earthquake {
             }
         }
 
-        JsonObject data_file = DataFile.load("data.json");
-        if (id.equals(data_file.get("earthquake_id").getAsString())) {
-            if (DEBUG) logger.debug("地震IDが同じなため通知しません");
-            return;
-        }
-        data_file.addProperty("earthquake_id", id);
-        DataFile.save("data.json", data_file);
-        if (DEBUG) logger.debug("地震ID {} を data.json に保存しました", id);
-
-        presentationType = typeMap.getOrDefault(presentationType, "不明");
-        earthquakeIntensity = intensityMap.getOrDefault(earthquakeIntensity, "不明");
-        tsunami = tsunamiMap.getOrDefault(tsunami, "不明");
-
         String messageContent = String.format(
                 "\n%s\n発表元: %s\n発表時間: %s\n地震発生時間: %s\n地震発生場所: %s\n震源の深さ: %sKm\n震度: %s\nマグニチュード: %s\n地震の津波: %s\n都道府県: %s",
                 presentationType, publisher, announcementTime, earthquakeTime, earthquakeName, depth, earthquakeIntensity,
                 magnitude, tsunami, prefectures
         );
 
-        boolean success = LineNotify.sendNotification(DataFile.load("config.json").get("token").getAsString(), messageContent);
-        if (!success) {
-            logger.warn("地震情報の通知に失敗しました");
-        }
+        LineNotify.sendNotification(DataFile.load("config.json").get("token").getAsString(), messageContent);
+        if (config.get("mail_enable").getAsBoolean()) Mail.send("地震情報", messageContent);
     }
 }
