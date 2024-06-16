@@ -12,6 +12,14 @@
         </encoder>
     </appender>
 
+    <logger name="com.zaxxer.hikari" level="INFO" additivity="false">
+        <appender-ref ref="STDOUT" />
+    </logger>
+
+    <logger name="org.mariadb.jdbc" level="INFO" additivity="false">
+        <appender-ref ref="STDOUT" />
+    </logger>
+
     <root level="debug">
         <appender-ref ref="STDOUT" />
         <appender-ref ref="FILE" />
