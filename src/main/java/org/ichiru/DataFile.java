@@ -17,7 +17,7 @@ public class DataFile {
         try (FileReader reader = new FileReader(filename)) {
             return JsonParser.parseReader(reader).getAsJsonObject();
         } catch (IOException e) {
-            logger.error("設定ファイルの読み込み中にエラーが発生しました: " + e.getMessage());
+            logger.error("設定ファイルの読み込み中にエラーが発生しました: {}", e.getMessage());
             return new JsonObject();
         }
     }
@@ -28,13 +28,14 @@ public class DataFile {
             String prettyJsonString = gson.toJson(data);
             writer.write(prettyJsonString);
         } catch (IOException e) {
-            logger.error("設定ファイルの保存中にエラーが発生しました: " + e.getMessage());
+            logger.error("設定ファイルの保存中にエラーが発生しました: {}", e.getMessage());
         }
     }
     public static void create_config() {
         JsonObject defaultConfig = new JsonObject();
         defaultConfig.addProperty("token", "");
         defaultConfig.addProperty("debug", false);
+        defaultConfig.addProperty("error_send", false);
         defaultConfig.addProperty("Weather_city_id", "");
         defaultConfig.addProperty("Weather_station", "");
         defaultConfig.addProperty("Weather_hours", 7);

@@ -17,6 +17,8 @@ public class WeatherTemperature {
     private static final Logger logger = LoggerFactory.getLogger(WeatherTemperature.class);
     private static final JsonObject config = DataFile.load("config.json");
     private static final Boolean DEBUG = config.get("debug").getAsBoolean();
+    private static final Boolean ERROR_SEND = config.get("error_send").getAsBoolean();
+
     public static void notifyIfExceedsThreshold() {
         if (DEBUG) logger.debug("最高気温が特定の値を超えているか確認します");
         if (!config.has("Weather_city_id")){
@@ -50,6 +52,7 @@ public class WeatherTemperature {
             }
         } catch (IOException e) {
             logger.error(e.getMessage());
+            if (ERROR_SEND) LineNotify.sendNotification(config.get("token").getAsString(), e.getMessage());
         }
     }
 }

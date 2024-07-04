@@ -9,18 +9,20 @@ import org.slf4j.LoggerFactory;
 import org.ichiru.notifi.LineNotify;
 import org.ichiru.notifi.Mail;
 
+import java.sql.*;
+import java.sql.Connection;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.UUID;
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.SQLException;
 
 public class Earthquake {
     private static final Logger logger = LoggerFactory.getLogger(Earthquake.class);
     private static final String WEBSOCKET_URL = "wss://api.p2pquake.net/v2/ws";
     private static final JsonObject config = DataFile.load("config.json");
     private static final Boolean DEBUG = config.get("debug").getAsBoolean();
+    private static final Boolean ERROR_SEND = config.get("error_send").getAsBoolean();
     private static HikariDataSource dataSource;
 
     // 地震情報のタイプを日本語に変換するためのマップ
@@ -109,7 +111,7 @@ public class Earthquake {
             return;
         }
 
-        String id = data.has("id") ? data.get("id").getAsString() : UUID.randomUUID().toString().replace("-", "");
+        String id = data.get("_id").getAsString();
         String publisher = data.has("issue") && data.get("issue").getAsJsonObject().has("source") ? data.get("issue").getAsJsonObject().get("source").getAsString() : "不明";
         String announcementTime = data.has("issue") && data.get("issue").getAsJsonObject().has("time") ? data.get("issue").getAsJsonObject().get("time").getAsString() : "不明";
         String presentationType = data.has("issue") && data.get("issue").getAsJsonObject().has("type") ? data.get("issue").getAsJsonObject().get("type").getAsString() : "不明";
@@ -121,43 +123,48 @@ public class Earthquake {
         String tsunami = data.has("earthquake") && data.get("earthquake").getAsJsonObject().has("domesticTsunami") ? data.get("earthquake").getAsJsonObject().get("domesticTsunami").getAsString() : "不明";
         String prefectures = data.has("points") && !data.get("points").getAsJsonArray().isEmpty() && data.get("points").getAsJsonArray().get(0).getAsJsonObject().has("pref") ? data.get("points").getAsJsonArray().get(0).getAsJsonObject().get("pref").getAsString() : "不明";
 
-        if (id.equals(config.get("earthquake_id").getAsString())) {
-            if (DEBUG) logger.debug("地震IDが同じなため通知しません");
-            return;
+        try {
+            if (id.equals(config.get("earthquake_id").getAsString())) {
+                if (DEBUG) logger.debug("地震IDが同じなため通知しません");
+                return;
+            }
+        } catch (NullPointerException e) {
+            logger.warn(e.getMessage());
         }
         config.addProperty("earthquake_id", id);
         DataFile.save("data.json", config);
         if (DEBUG) logger.debug("地震ID {} を data.json に保存しました", id);
 
         presentationType = typeMap.getOrDefault(presentationType, "不明");
-        earthquakeIntensity = intensityMap.getOrDefault(earthquakeIntensity, "不明");
         tsunami = tsunamiMap.getOrDefault(tsunami, "不明");
 
         //データベースに保存
         if (config.get("database_enable").getAsBoolean()){
-            String sql = "INSERT INTO earthquake (id, announcement_time, earthquake_intensity, prefectures, earthquake_name, magnitude, depth, tsunami) VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
+            String sql = "INSERT INTO earthquake (earthquake_id, Occurrence_time, earthquake_intensity, prefectures, observatory, magnitude, depth, tsunami, date) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)";
+            DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy/MM/dd HH:mm:ss");
 
             try (Connection conn = dataSource.getConnection();
                  PreparedStatement pstmt = conn.prepareStatement(sql)) {
                 pstmt.setString(1, id);
-                pstmt.setString(2, announcementTime);
-                pstmt.setString(3, earthquakeIntensity);
+                pstmt.setTimestamp(2, Timestamp.valueOf(LocalDateTime.parse(earthquakeTime, formatter)));
+                pstmt.setInt(3, Integer.parseInt(earthquakeIntensity));
                 pstmt.setString(4, prefectures);
                 pstmt.setString(5, earthquakeName);
-                pstmt.setString(6, magnitude);
+                pstmt.setDouble(6, Double.parseDouble(magnitude));
                 pstmt.setInt(7, Integer.parseInt(depth));
                 pstmt.setString(8, tsunami);
+                pstmt.setDate(9, Date.valueOf(LocalDate.now()));
                 pstmt.executeUpdate();
-                if (DEBUG) logger.debug("/");
+                if (DEBUG) logger.debug("データの保存に成功しました");
             } catch (SQLException e) {
                 logger.error("データ保存中にエラーが発生しました: " + e.getMessage());
+                if (ERROR_SEND) LineNotify.sendNotification(DataFile.load("config.json").get("token").getAsString(), e.getMessage());
             }
         }
 
         // 震度が4未満の場合は通知を送信しない
-        if (earthquakeIntensity != null && !earthquakeIntensity.equals("不明")) {
-            int intensity = Integer.parseInt(earthquakeIntensity);
-            if (intensity < 40) {
+        if (!earthquakeIntensity.equals("不明")) {
+            if (Integer.parseInt(earthquakeIntensity) < 40) {
                 if (DEBUG) logger.debug("震度が4未満のため通知しません");
                 return;
             }
@@ -165,7 +172,7 @@ public class Earthquake {
 
         String messageContent = String.format(
                 "\n%s\n発表元: %s\n発表時間: %s\n地震発生時間: %s\n地震発生場所: %s\n震源の深さ: %sKm\n震度: %s\nマグニチュード: %s\n地震の津波: %s\n都道府県: %s",
-                presentationType, publisher, announcementTime, earthquakeTime, earthquakeName, depth, earthquakeIntensity,
+                presentationType, publisher, announcementTime, earthquakeTime, earthquakeName, depth, intensityMap.getOrDefault(earthquakeIntensity, "不明"),
                 magnitude, tsunami, prefectures
         );
 

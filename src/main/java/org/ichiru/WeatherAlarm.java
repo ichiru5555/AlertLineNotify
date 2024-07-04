@@ -22,6 +22,7 @@ public class WeatherAlarm {
     private static final OkHttpClient client = new OkHttpClient();
     private static final String WEATHER_STATION = DataFile.load("config.json").get("Weather_station").getAsString();
     private static final Boolean DEBUG = DataFile.load("config.json").get("debug").getAsBoolean();
+    private static final Boolean ERROR_SEND = DataFile.load("config.json").get("error_send").getAsBoolean();
 
     // データの取得と処理を行うメソッド
     public static void fetchAndProcessData() {
@@ -103,6 +104,7 @@ public class WeatherAlarm {
             }
         } catch (IOException e) {
             logger.error("URL " + url + " からXMLの取得エラー: " + e.getMessage());
+            if (ERROR_SEND) LineNotify.sendNotification(DataFile.load("config.json").get("token").getAsString(), url+": "+e.getMessage());
         }
         return null;
     }

@@ -29,7 +29,7 @@ public class Mail {
         }
         if (DEBUG) logger.debug("送信先メールアドレスのチェック");
         for (String recipient: recipients){
-            if (!recipient.equals("@")){
+            if (!recipient.contains("@")){
                 logger.warn("{} はメールアドレスではないため除外します", recipient);
                 recipients.remove(recipient);
             }
