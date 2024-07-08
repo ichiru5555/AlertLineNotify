@@ -3,7 +3,6 @@ package org.ichiru;
 import com.google.gson.JsonObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.ichiru.keep.Exchange;
 
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
@@ -33,7 +32,5 @@ public class Main {
         scheduler.scheduleAtFixedRate(WeatherAlarm::fetchAndProcessData, 0, 5, TimeUnit.MINUTES);
         TaskScheduler Taskscheduler = new TaskScheduler(scheduler);
         Taskscheduler.Daily(WeatherTemperature::notifyIfExceedsThreshold, config.get("Weather_hours").getAsInt(), config.get("Weather_minutes").getAsInt());
-        Taskscheduler.Daily(Exchange::CheckPrice, 0, 10);
-        Taskscheduler.Month(Exchange::delete, 1, 0, 0);
     }
 }

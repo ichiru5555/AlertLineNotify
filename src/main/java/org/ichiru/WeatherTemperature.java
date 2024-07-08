@@ -7,8 +7,7 @@ import com.google.gson.Gson;
 import com.google.gson.JsonObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.ichiru.notifi.LineNotify;
-import org.ichiru.notifi.Mail;
+import org.ichiru.send.LineNotify;
 
 import java.io.IOException;
 
@@ -33,21 +32,17 @@ public class WeatherTemperature {
         }
         OkHttpClient client = new OkHttpClient();
         Request request = new Request.Builder()
-                .url("https://weather.tsukumijima.net/api/forecast?city=" + config.get("city_id"))
+                .url("https://weather.tsukumijima.net/api/forecast?city=" + config.get("Weather_city_id").getAsString())
                 .build();
 
         try (Response response = client.newCall(request).execute()) {
             if (response.isSuccessful() && response.body() != null) {
                 String responseBody = response.body().string();
                 Gson gson = new Gson();
-                JsonObject jsonObject = gson.fromJson(responseBody, JsonObject.class);
-                JsonObject forecasts = jsonObject.getAsJsonArray("forecasts").get(1).getAsJsonObject();
-                JsonObject temperature = forecasts.getAsJsonObject("temperature");
-                JsonObject max = temperature.getAsJsonObject("max");
-                int maxTemp = max.get("celsius").getAsInt();
-                if (config.get("Weather_max_temp").getAsInt() <= maxTemp){
-                    LineNotify.sendNotification(DataFile.load("config.json").get("token").getAsString(), "\n最高気温がしきい値を超えました\n最高気温: " + maxTemp);
-                    Mail.send("最高気温がしきい値を超過", "\n最高気温がしきい値を超えました\n最高気温: " + maxTemp);
+                JsonObject data = gson.fromJson(responseBody, JsonObject.class);
+                int temperature = data.getAsJsonArray("forecasts").get(1).getAsJsonObject().getAsJsonObject("temperature").getAsJsonObject("max").get("celsius").getAsInt();
+                if (config.get("Weather_max_temp").getAsInt() < temperature){
+                    LineNotify.sendNotification(DataFile.load("config.json").get("token").getAsString(), "\n最高気温がしきい値を超えました\n最高気温: " + temperature);
                 }
             }
         } catch (IOException e) {

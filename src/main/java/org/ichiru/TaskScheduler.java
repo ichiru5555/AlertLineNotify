@@ -37,24 +37,4 @@ public class TaskScheduler {
             task.run();
         }, initialDelay, period, TimeUnit.MILLISECONDS);
     }
-    public void Month(Runnable task, int monthDelay, int hour, int minute) {
-        Calendar now = Calendar.getInstance();
-        Calendar firstRun = Calendar.getInstance();
-        firstRun.set(Calendar.HOUR_OF_DAY, hour);
-        firstRun.set(Calendar.MINUTE, minute);
-        firstRun.set(Calendar.SECOND, 0);
-        firstRun.set(Calendar.MILLISECOND, 0);
-        firstRun.add(Calendar.MONTH, monthDelay);
-        if (firstRun.before(now)) {
-            firstRun.add(Calendar.MONTH, 1);
-        }
-        long initialDelay = firstRun.getTimeInMillis() - now.getTimeInMillis();
-        long period = TimeUnit.DAYS.toMillis(30L * monthDelay);
-        if (DEBUG) logger.debug("初回実行までの遅延時間: {} ミリ秒", initialDelay);
-        if (DEBUG) logger.debug("タスクを毎月 {} ヶ月後の {} 時 {} 分に実行します", monthDelay, hour, minute);
-        scheduler.scheduleAtFixedRate(() -> {
-            if (DEBUG) logger.debug("タスクを実行します");
-            task.run();
-        }, initialDelay, period, TimeUnit.MILLISECONDS);
-    }
 }

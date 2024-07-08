@@ -1,4 +1,4 @@
-package org.ichiru.notifi;
+package org.ichiru.send;
 
 import okhttp3.*;
 import org.slf4j.Logger;
@@ -25,7 +25,7 @@ public class LineNotify {
             if (response.isSuccessful()) {
                 if (DataFile.load("config.json").get("debug").getAsBoolean()) logger.debug("LINE通知に成功しました");
             } else {
-                logger.warn("LINE通知に失敗しました HTTPステータスコード: " + response.code());
+                logger.error("LINE通知に失敗しました HTTPステータスコード: " + response.code());
             }
         } catch (IOException e) {
             logger.error("LINE通知中にエラーが発生しました: " + e.getMessage());

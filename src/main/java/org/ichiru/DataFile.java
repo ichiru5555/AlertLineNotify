@@ -41,11 +41,6 @@ public class DataFile {
         defaultConfig.addProperty("Weather_hours", 7);
         defaultConfig.addProperty("Weather_minutes", 0);
         defaultConfig.addProperty("Weather_max_temp", 30);
-        defaultConfig.addProperty("mail_enable", false);
-        defaultConfig.addProperty("mail_host", "");
-        defaultConfig.addProperty("mail_port", "465");
-        defaultConfig.addProperty("mail_username", "");
-        defaultConfig.addProperty("mail_password", "");
         defaultConfig.addProperty("database_enable", false);
         defaultConfig.addProperty("database_host", "localhost");
         defaultConfig.addProperty("database_port", "3306");
@@ -63,7 +58,6 @@ public class DataFile {
     }
     public static void create_data() {
         JsonObject defaultData = new JsonObject();
-        defaultData.addProperty("earthquake_id", "");
         defaultData.addProperty("Alarm_id", "");
         save("data.json", defaultData);
         logger.info("データ保存ファイルを作成しました");
@@ -78,12 +72,6 @@ public class DataFile {
                 errors.add("市町村のコードが指定されていません");
             if (config.get("Weather_station").getAsString().isEmpty())
                 errors.add("気象台が指定されていません");
-            if (config.get("mail_host").getAsString().isEmpty())
-                errors.add("メールホストが指定されていません");
-            if (config.get("mail_username").getAsString().isEmpty())
-                errors.add("メールユーザー名が指定されていません");
-            if (config.get("mail_password").getAsString().isEmpty())
-                errors.add("メールパスワードが指定されていません");
             if (config.get("database_host").getAsString().isEmpty())
                 errors.add("データベースホスト名が指定されていません");
             if (config.get("database_port").getAsString().isEmpty())

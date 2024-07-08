@@ -11,8 +11,7 @@ import org.jsoup.select.Elements;
 import org.jsoup.parser.Parser;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.ichiru.notifi.LineNotify;
-import org.ichiru.notifi.Mail;
+import org.ichiru.send.LineNotify;
 
 import java.io.IOException;
 
@@ -55,7 +54,7 @@ public class WeatherAlarm {
 
             // URLが既に処理されているか確認
             if (entryId.equals(previousAlarmId)) {
-                logger.info("エントリーID {} は既に処理されています", entryId);
+                if (DEBUG) logger.debug("エントリーID {} は既に処理されています", entryId);
                 continue;
             }
 
@@ -84,10 +83,7 @@ public class WeatherAlarm {
         if (!allKindNameAreWarnings) {
             if (DEBUG) logger.debug("通知を送信しています...");
             LineNotify.sendNotification(DataFile.load("config.json").get("token").getAsString(), resultMessage.toString());
-            if (DataFile.load("config.json").get("mail_enable").getAsBoolean()){
-                Mail.send("警報等の通知", resultMessage.toString());
-            }
-            if (DEBUG) logger.info("通知が送信されました");
+            if (DEBUG) logger.debug("通知が送信されました");
         }
         if (DEBUG) logger.debug("警報の確認が完了しました");
     }
@@ -97,7 +93,7 @@ public class WeatherAlarm {
         Request request = new Request.Builder().url(url).build();
         try (Response response = client.newCall(request).execute()) {
             if (response.isSuccessful() && response.body() != null) {
-                if (DEBUG) logger.debug("XMLの取得に成功しました: " + url);
+                if (DEBUG) logger.debug("XMLの読み取りに成功しました" );
                 return response.body().string();
             } else {
                 logger.warn("URL " + url + " からXMLの取得に失敗しました。HTTPステータス: " + response.code());
