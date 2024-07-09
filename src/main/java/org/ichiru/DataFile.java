@@ -11,7 +11,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class DataFile {
-    private static final Logger logger = LoggerFactory.getLogger(DataFile.class.getName());
+    private static final Logger logger = LoggerFactory.getLogger(DataFile.class);
 
     public static JsonObject load(String filename) {
         try (FileReader reader = new FileReader(filename)) {
@@ -86,7 +86,7 @@ public class DataFile {
             errors.add(e.getMessage());
         }
         if (!errors.isEmpty()) {
-            for (String error : errors) {
+            for (String error: errors) {
                 logger.error(error);
             }
             System.exit(1);

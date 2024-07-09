@@ -49,7 +49,7 @@ public class WeatherAlarm {
         String previousAlarmId = DataFile.load("data.json").get("Alarm_id").getAsString();
         boolean allKindNameAreWarnings = true;
 
-        for (Element url : entryUrls) {
+        for (Element url: entryUrls) {
             String entryId = url.text();
 
             // URLが既に処理されているか確認
@@ -111,7 +111,7 @@ public class WeatherAlarm {
         Elements entries = doc.select("entry");
         Elements entryUrls = new Elements();
         int count = 0;
-        for (Element entry : entries) {
+        for (Element entry: entries) {
             if (count >= 5) {
                 break;
             }
@@ -148,7 +148,7 @@ public class WeatherAlarm {
         Elements informations = doc.select("Head > Headline > Information[type=気象警報・注意報（市町村等をまとめた地域等）] > Item");
         boolean hasAlert = false;
 
-        for (Element info : informations) {
+        for (Element info: informations) {
             String kindName = info.selectFirst("Kind > Name").text();
             resultMessage.append(kindName).append("\n");
             if (DEBUG) logger.debug("解析中のKindName: " + kindName);
@@ -158,7 +158,7 @@ public class WeatherAlarm {
             }
 
             Elements areas = info.select("Areas > Area");
-            for (Element area : areas) {
+            for (Element area: areas) {
                 resultMessage.append(area.selectFirst("Name").text()).append("\n");
                 resultMessage.append("----").append("\n");
                 if (DEBUG) logger.debug("解析中のエリア名: " + area.selectFirst("Name").text());

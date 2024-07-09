@@ -127,7 +127,7 @@ public class Earthquake {
                 connect();
             } catch (InterruptedException e) {
                 Thread.currentThread().interrupt();
-                logger.error("再接続の試行が中断されました", e);
+                logger.error("再接続の試行が中断されました\n理由は {}", e);
                 if (ERROR_SEND) LineNotify.sendNotification(TOKEN, e.getMessage());
             }
         });
@@ -175,7 +175,7 @@ public class Earthquake {
                 pstmt.executeUpdate();
                 if (DEBUG) logger.debug("データの保存に成功しました");
             } catch (SQLException e) {
-                logger.error("データ保存中にエラーが発生しました: " + e.getMessage());
+                logger.error("データ保存中にエラーが発生しました: {}", e.getMessage());
                 if (ERROR_SEND) LineNotify.sendNotification(TOKEN, e.getMessage());
             }
         }

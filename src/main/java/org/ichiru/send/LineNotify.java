@@ -8,7 +8,7 @@ import org.ichiru.DataFile;
 import java.io.IOException;
 
 public class LineNotify {
-    private static final Logger logger = LoggerFactory.getLogger(LineNotify.class.getName());
+    private static final Logger logger = LoggerFactory.getLogger(LineNotify.class);
     private static final OkHttpClient client = new OkHttpClient();
     public static void sendNotification(String token, String messageContent) {
         RequestBody body = new FormBody.Builder()
