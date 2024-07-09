@@ -47,12 +47,6 @@ public class DataFile {
         defaultConfig.addProperty("database_name", "");
         defaultConfig.addProperty("database_username", "");
         defaultConfig.addProperty("database_password", "");
-        defaultConfig.addProperty("exchange_enable", false);
-        JsonArray recipientsArray = new JsonArray();
-        for (String email: new String[]{"mailaddress", "mailaddress"}) {
-            recipientsArray.add(email);
-        }
-        defaultConfig.add("mail_recipients", recipientsArray);
         save("config.json", defaultConfig);
         logger.info("デフォルトの設定ファイルを作成しました");
     }
