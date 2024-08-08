@@ -36,7 +36,7 @@ public class Main {
             TaskScheduler Taskscheduler = new TaskScheduler(scheduler);
             Taskscheduler.Daily(WeatherTemperature::notifyIfExceedsThreshold, config.get("Weather_hours").getAsInt(), config.get("Weather_minutes").getAsInt());
         } else {
-            System.exit();
+            System.exit(1);
             logger.error("機能が有効になっていないためプログラムは終了します");
         }
     }
