@@ -36,12 +36,15 @@ public class DataFile {
         defaultConfig.addProperty("token", "");
         defaultConfig.addProperty("debug", false);
         defaultConfig.addProperty("error_send", false);
+        defaultConfig.addProperty("Earthquake_enable", true);
+        defaultConfig.addProperty("WeatherAlarm_enable", true);
+        defaultConfig.addProperty("WeatherTemperature_enable", true);
+        defaultConfig.addProperty("database_enable", false);
         defaultConfig.addProperty("Weather_city_id", "");
         defaultConfig.addProperty("Weather_station", "");
         defaultConfig.addProperty("Weather_hours", 7);
         defaultConfig.addProperty("Weather_minutes", 0);
         defaultConfig.addProperty("Weather_max_temp", 30);
-        defaultConfig.addProperty("database_enable", false);
         defaultConfig.addProperty("database_host", "localhost");
         defaultConfig.addProperty("database_port", "3306");
         defaultConfig.addProperty("database_name", "");
