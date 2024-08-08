@@ -32,7 +32,7 @@ public class Main {
             scheduler.submit(Earthquake::sendEarthquakeNotification);
         } else if (config.get("WeatherAlarm_enable").getAsBoolean()) {
             scheduler.scheduleAtFixedRate(WeatherAlarm::fetchAndProcessData, 0, 5, TimeUnit.MINUTES);
-        } else if (config.get("WeatherTemperature_enable")){
+        } else if (config.get("WeatherTemperature_enable").getAsBoolean()){
             TaskScheduler Taskscheduler = new TaskScheduler(scheduler);
             Taskscheduler.Daily(WeatherTemperature::notifyIfExceedsThreshold, config.get("Weather_hours").getAsInt(), config.get("Weather_minutes").getAsInt());
         } else {
