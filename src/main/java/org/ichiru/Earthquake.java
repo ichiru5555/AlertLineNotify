@@ -193,8 +193,11 @@ public class Earthquake {
         else if (earthquakeName.isEmpty())
             earthquakeName = "不明";
 
+        if(depth.matches(".*\\d.*"))
+            depth = depth+"Km";
+
         String messageContent = String.format(
-                "\n%s\n発表元: %s\n発表時間: %s\n地震発生時間: %s\n地震発生場所: %s\n震源の深さ: %sKm\n震度: %s\nマグニチュード: %s\n地震の津波: %s\n都道府県: %s",
+                "\n%s\n発表元: %s\n発表時間: %s\n地震発生時間: %s\n地震発生場所: %s\n震源の深さ: %s\n震度: %s\nマグニチュード: %s\n地震の津波: %s\n都道府県: %s",
                 presentationType, publisher, announcementTime, earthquakeTime, earthquakeName, depthMap.getOrDefault(depth, depth), intensityMap.getOrDefault(earthquakeIntensity, "不明"),
                 magnitude, tsunami, prefectures
         );
