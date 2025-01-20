@@ -29,7 +29,6 @@ public class Earthquake {
     private static WebSocket webSocket;
     private static final int RECONNECT_DELAY_SECONDS = 5;
 
-    // 地震情報のタイプを日本語に変換するためのマップ
     private static final Map<String, String> typeMap = new HashMap<>() {{
         put("ScalePrompt", "震度速報");
         put("Destination", "震源に関する情報");
@@ -39,7 +38,6 @@ public class Earthquake {
         put("Other", "その他の情報");
     }};
 
-    // 震度の情報を日本語に変換するためのマップ
     private static final Map<String, String> intensityMap = new HashMap<>() {{
         put("-1", "震度情報なし");
         put("10", "震度1");
@@ -53,7 +51,6 @@ public class Earthquake {
         put("70", "震度7");
     }};
 
-    // 津波の情報を日本語に変換するためのマップ
     private static final Map<String, String> tsunamiMap = new HashMap<>() {{
         put("None", "なし");
         put("Unknown", "不明");
@@ -68,7 +65,6 @@ public class Earthquake {
         put("0", "ごく浅い");
     }};
 
-    // 地震通知を送信するメソッド
     public static void sendEarthquakeNotification() {
         if (config.get("database_enable").getAsBoolean()) {
             dataSource = new HikariDataSource();
@@ -135,7 +131,6 @@ public class Earthquake {
 
     private static void processMessage(String message) {
         JsonObject data = JsonParser.parseString(message).getAsJsonObject();
-        // フィルタリング: codeが551, 552, 554, 556でない場合は通知を送信しない
         int code = data.get("code").getAsInt();
         if (code != 551 && code != 552 && code != 554 && code != 556) {
             if(DEBUG) logger.debug("コードが551, 552, 554, 556でないため通知しません");
@@ -157,7 +152,6 @@ public class Earthquake {
         presentationType = typeMap.getOrDefault(presentationType, "不明");
         tsunami = tsunamiMap.getOrDefault(tsunami, "不明");
 
-        //データベースに保存
         if (config.get("database_enable").getAsBoolean()){
             String sql = "INSERT INTO earthquake (Occurrence_time, earthquake_intensity, prefectures, observatory, magnitude, depth, tsunami, date) VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
             DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy/MM/dd HH:mm:ss");
@@ -180,7 +174,6 @@ public class Earthquake {
             }
         }
 
-        // 震度が4未満の場合は通知を送信しない
         if (!earthquakeIntensity.equals("不明")) {
             if (Integer.parseInt(earthquakeIntensity) < 40) {
                 if (DEBUG) logger.debug("震度が4未満のため通知しません");
